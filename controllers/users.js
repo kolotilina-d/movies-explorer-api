@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const BadRequestError = require('../utils/BadRequest');
 const ConflictError = require('../utils/Conflict');
+const { CONFLICT_ERROR } = require('../utils/constans');
 
 const { JWT_SECRET = 'secret_key' } = process.env;
 
@@ -31,7 +32,7 @@ module.exports.createUser = (req, res, next) => {
       if (err instanceof mongoose.Error.ValidationError) {
         next(new BadRequestError(err.message));
       } else if (err.code === 11000) {
-        next(new ConflictError('Пользователь уже зарегистрирован'));
+        next(new ConflictError(CONFLICT_ERROR));
       } else {
         next(err);
       }
@@ -39,12 +40,19 @@ module.exports.createUser = (req, res, next) => {
 };
 
 module.exports.editUser = (req, res, next) => {
-  const { name, email } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, email }, { new: true, runValidators: true })
-    .then((user) => res.status(httpConstans.HTTP_STATUS_OK).send(user))
+  User.findByIdAndUpdate(req.user._id, {
+    name: req.body.name,
+    email: req.body.email,
+  }, { new: true, runValidators: true })
+    .then((user) => res.status(httpConstans.HTTP_STATUS_OK).send({
+      name: user.name,
+      email: user.email,
+    }))
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
         next(new BadRequestError(err.message));
+      } else if (err.code === 11000) {
+        next(new ConflictError(CONFLICT_ERROR));
       } else {
         next(err);
       }
