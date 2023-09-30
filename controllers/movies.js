@@ -4,7 +4,11 @@ const Movie = require('../models/movie');
 const BadRequest = require('../utils/BadRequest');
 const NotFoundError = require('../utils/NotFound');
 const ForbiddenError = require('../utils/Forbidden');
-const { FORBIDDEN_ERROR, BAD_REQUEST, NOT_FOUND } = require('../utils/constans');
+const {
+  FORBIDDEN_ERROR,
+  BAD_REQUEST,
+  NOT_FOUND,
+} = require('../utils/constans');
 
 module.exports.getMovies = (req, res, next) => {
   Movie.find({ owner: req.user._id })
@@ -57,7 +61,7 @@ module.exports.deleteMovie = (req, res, next) => {
     .orFail(new NotFoundError(NOT_FOUND))
     .then((movie) => {
       if (!movie.owner.equals(req.user._id)) {
-        next(new ForbiddenError(FORBIDDEN_ERROR));
+        throw (next(new ForbiddenError(FORBIDDEN_ERROR)));
       }
       Movie.deleteOne(movie)
         .then(() => {
